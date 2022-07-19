@@ -79,23 +79,27 @@ export default {
             comments: [],
         }
     },
-    async created() {
-        const docSnap = await songsCollection.doc(this.$route.params.id).get();
+    async beforeRouteEnter(to, from, next) {
+        const docSnap = await songsCollection.doc(to.params.id).get();
 
-        if (!docSnap.exists) {
-            this.$router.push({ name: 'home'});
-            return;
-        }
+        next((vm)=> {
+            if (!docSnap.exists) {
+                vm.$router.push({ name: 'home'});
+                return;
+            }
 
-        const { sort } = this.$route.query;
+            const { sort } = vm.$route.query;
 
-        this.sort = sort === '1' || sort === '2' ? sort : '1';
+            vm.sort = sort === '1' || sort === '2' ? sort : '1';
 
-        this.song = docSnap.data();
-        this.getComments();
+            vm.song = docSnap.data();
+            vm.getComments();
+        });
     },
     computed: {
-        ...mapState(['userLoggedIn']),
+        ...mapState({
+            userLoggedIn: (state) => state.auth.userLoggedIn
+        }),
         sortedComments() {
             return this.comments.slice().sort((a, b) => {
                 if (this.sort === '1') {
